@@ -37,6 +37,13 @@ async function main() {
   const col = name => { const i = H.indexOf(name); if (i < 0) throw new Error("Нет столбца: " + name); return i; };
   const cSec = col("Секция"), cRooms = col("Количество комнат"), cArea = col("Площадь с коэф 0,3/0,5"),
         cPrice = col("Цена с макс. скидкой (цена индекса)"), cRough = col("Черновая отделка"), cStat = col("Статус");
+  /* для вкладки «Сравнение секций»: этаж, номер, тип, база, цена м² по прайсу и разложение коэффициентов
+     (столбцы от группы «Коэффициенты» до «Индекс этажей» включительно; значения ≠ 1) */
+  const cFloor = col("Этаж"), cNo = col("Номер проектный"), cType = col("Тип_расшир"), cBase = col("Стартовый индекс"),
+        cPpm = col("Стартовая цена"), cFl = col("Индекс этажей");
+  const cK0 = Math.max(...rows.slice(Math.max(0, h - 3), h).map(r => r.findIndex(x => (x || "").trim() === "Коэффициенты")));
+  if (cK0 < 0 || cK0 > cFl) throw new Error("Не найдена группа столбцов «Коэффициенты»");
+  const coefStr = r => { const o = []; for (let j = cK0; j <= cFl; j++) { const v = num(r[j]); if (v > 0 && Math.abs(v - 1) > 1e-9) o.push((j === cFl ? "Этаж" : H[j]) + "=" + v); } return o.join("|"); };
 
   const html = fs.readFileSync(HTML, "utf8");
   const rough = +(html.match(/"rough":(\d+)/) || [])[1] || 8000; // поправка на черновую отделку, ₽/м²
@@ -48,7 +55,9 @@ async function main() {
     if (!rc || !(sec > 0) || !(area > 0) || !(price > 0)) throw new Error(`Строка ${r[0]}: не разобраны данные (${r[cSec]}, ${r[cRooms]}, ${r[cArea]}, ${r[cPrice]})`);
     const isRough = (r[cRough] || "").trim().toLowerCase() === "да";
     const free = (r[cStat] || "").trim().toLowerCase() === "свободно" ? 1 : 0; // r[5]: 1 — статус «Свободно»
-    out.push([rc, area, price, isRough ? Math.round(price + rough * area) : price, sec, free]);
+    /* r[6..11]: этаж, № квартиры, тип, база ₽/м², цена м² по прайсу (база × коэф. − скидка за черновую), коэффициенты «Имя=знач|…» */
+    out.push([rc, area, price, isRough ? Math.round(price + rough * area) : price, sec, free,
+      num(r[cFloor]), (r[cNo] || "").trim(), (r[cType] || "").trim(), Math.round(num(r[cBase])), Math.round(num(r[cPpm])), coefStr(r)]);
   }
   if (out.length < 300) throw new Error("Слишком мало лотов: " + out.length);
 
