@@ -77,13 +77,13 @@ td.muted{color:var(--muted)}
 /* вкладка «Сравнение секций» */
 .cmp-grid{min-width:640px}
 .cmp-grid th{text-align:left}
-.cmp-grid td{vertical-align:top;text-align:left;white-space:normal;min-width:150px;padding:6px 8px}
+.cmp-grid td{vertical-align:middle;text-align:left;white-space:normal;min-width:150px;padding:2px 6px}
 .cmp-grid td.fl,.cmp-grid th.fl{font-weight:600;color:var(--ink2);min-width:52px;width:52px;text-align:center}
 .cmp-grid tbody tr{cursor:default} .cmp-grid tbody tr:hover td{background:transparent}
-.cl{display:block;width:100%;text-align:left;font:inherit;font-size:12px;line-height:1.35;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:6px 8px;margin:3px 0;cursor:pointer;color:var(--ink)}
+.cl{display:block;width:100%;text-align:left;font:inherit;font-size:12px;line-height:1.25;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:3px 7px;margin:2px 0;cursor:pointer;color:var(--ink)}
 .cl:hover{border-color:var(--line-strong)}
 .cl[aria-pressed="true"]{border-color:var(--own);box-shadow:inset 0 0 0 1px var(--own);background:var(--own-soft)}
-.cl b{font-size:13.5px}
+.cl b{font-size:13px}
 .cl .m{color:var(--muted)}
 .dv{font-weight:600;white-space:nowrap} .dv.up{color:var(--dear-ink)} .dv.dn{color:var(--cheap-ink)}
 .cl .fr{color:#1E7B4B;font-weight:600}
@@ -700,8 +700,8 @@ function renderCmp(){
   /* сетка этаж × секция */
   const cell = (sc, fl) => { const rows = at(sc, fl); if(!rows.length) return '<td></td>';
     const rp = sc!==ref ? avgP(at(ref, fl)) : null;
-    return `<td>${rows.map(r=>`<button class="cl" data-no="${r[7]}" aria-pressed="${sel.includes(r[7])}" title="${r[8]}"><span class="m">${r[7]} · ${f1(r[1])} м²</span>${r[5]===1?' <span class="fr">своб.</span>':""}<br><b>${f1(ppm(r)/1000)}</b> <span class="m">тыс./м² · ${f1(r[iP]/1e6)} млн</span>${rp ? " " + dvTxt(ppm(r)/rp-1) : ""}</button>`).join("")}</td>`; };
-  const grid = `<section class="slide"><div class="sh"><div><h2>${grpName}: по этажам</h2><div class="dt">Цена м² в тыс. ₽ и стоимость лота; % — к средней цене С${ref} на том же этаже. Щелчок по лоту добавляет его в разложение ниже (до 6 лотов).</div></div></div>
+    return `<td>${rows.map(r=>`<button class="cl" data-no="${r[7]}" aria-pressed="${sel.includes(r[7])}" title="${r[7]} · ${r[8]}"><b>${f1(ppm(r)/1000)}</b> <span class="m">${f1(r[1])} м² · ${f1(r[iP]/1e6)} млн</span>${r[5]===1?' <span class="fr">своб.</span>':""}${rp ? " " + dvTxt(ppm(r)/rp-1) : ""}</button>`).join("")}</td>`; };
+  const grid = `<section class="slide"><div class="sh"><div><h2>${grpName}: по этажам</h2><div class="dt">Цена м² в тыс. ₽, площадь и стоимость лота (номер — при наведении); % — к средней цене С${ref} на том же этаже. Щелчок по лоту добавляет его в разложение ниже (до 6 лотов).</div></div></div>
     <div class="tbl"><table class="cmp-grid"><thead><tr><th class="fl">Этаж</th>${secs.map(sc=>`<th>С${sc} <span style="font-weight:400">· ${finishOf(sc)}</span></th>`).join("")}</tr></thead>
     <tbody>${(gf=>gf.length ? gf.map(fl=>`<tr><td class="fl">${fl}</td>${secs.map(sc=>cell(sc, fl)).join("")}</tr>`).join("") : `<tr><td colspan="${secs.length+1}" class="empty">Нет этажей, где есть лоты двух и более секций</td></tr>`)(floors.filter(fl=>S.cf!=="common" || secs.filter(sc=>at(sc,fl).length).length>1))}</tbody></table></div></section>`;
   /* разложение цены выбранных лотов */
