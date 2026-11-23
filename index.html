@@ -71,6 +71,11 @@ tr.tot td{font-weight:600;border-top:1px solid var(--line-strong);cursor:default
 tr.tot:hover td{background:transparent}
 tr.tot.sub td{font-weight:600;border-top:1px solid var(--line);border-bottom:1px solid var(--line-strong);background:var(--bg,#F4F7FA)}
 tr.tot.sub:hover td{background:var(--bg,#F4F7FA)}
+tr.grp td{cursor:pointer}
+tr.grp:hover td{background:var(--line,#E6ECF2)}
+tr.grp .car{display:inline-block;width:1.1em;color:var(--muted)}
+tr.gd td:first-child{padding-left:2em}
+#sum .grp-all{margin-left:8px;font:inherit;font-size:11px;font-weight:500;color:var(--muted);background:none;border:1px solid var(--line-strong);border-radius:10px;padding:1px 8px;cursor:pointer}
 td.own{color:var(--own);font-weight:600}
 td.d-cheap{background:var(--cheap);color:var(--cheap-ink);font-weight:600} td.d-dear{background:var(--dear);color:var(--dear-ink);font-weight:600}
 td.muted{color:var(--muted)}
@@ -807,16 +812,21 @@ function render(){
   document.getElementById("sum-period").innerHTML = `<b>Источник:</b> текущий прайс Пульман (лист «Прайс»), цена с максимальной скидкой; итоги взвешены по площади лотов.`;
   /* по площади (19.11.2026): с итогами по комнатности (взвешены по площади лотов, как «Итого») */
   const isA = S.view==="area"; const noD = true, noE = true; /* сделки и экспозиция конкурентов из таблицы убраны — только прайс Пульман (19.11.2026) */
-  const head = `<thead><tr><th>${isA?"Тип и площадь":"Тип"}</th><th>Лотов</th><th>Цена м², ₽</th><th>Ср. бюджет, млн</th><th>Ср. площадь, м²</th>${noE ? "" : "<th>Медиана экспозиции</th><th>Площадь экспозиции, м²</th><th>Пульман к экспозиции</th>"}${noD ? "" : "<th>Медиана сделок</th><th>Площадь сделок, м²</th><th>Пульман к сделкам</th><th>Сделок</th>"}</tr></thead>`;
+  const grp = isA && new Set(shown.map(a=>a.g.t)).size > 1; const open = new Set(Array.isArray(S.sopen) ? S.sopen : []); const allOpen = grp && [...new Set(shown.map(a=>a.g.t))].every(t=>open.has(t));
+  const head = `<thead><tr><th>${isA?"Тип и площадь":"Тип"}${grp ? ` <button type="button" class="grp-all" aria-pressed="${allOpen}">${allOpen ? "свернуть все" : "развернуть все"}</button>` : ""}</th><th>Лотов</th><th>Цена м², ₽</th><th>Ср. бюджет, млн</th><th>Ср. площадь, м²</th>${noE ? "" : "<th>Медиана экспозиции</th><th>Площадь экспозиции, м²</th><th>Пульман к экспозиции</th>"}${noD ? "" : "<th>Медиана сделок</th><th>Площадь сделок, м²</th><th>Пульман к сделкам</th><th>Сделок</th>"}</tr></thead>`;
   const dev = (o,m) => m==null||o==null ? null : o/m-1;
-  const rowT = (cls, lbl, X) => `<tr class="${cls}"><td>${lbl}</td><td>${f0(X.own.n)}</td><td class="own">${f0(X.own.ppm)}</td><td>${f1(X.own.bud/1e6)}</td><td>${f1(X.own.area)}</td>${noE ? "" : `<td>${f0(X.E&&X.E.med)}</td><td class="muted">${f1(X.areaE)}</td><td class="${devCls(X.E&&X.E.dev)}">${pc(X.E&&X.E.dev)}</td>`}${noD ? "" : `<td>${f0(X.D&&X.D.med)}</td><td class="muted">${f1(X.areaD)}</td><td class="${devCls(X.D&&X.D.dev)}">${pc(X.D&&X.D.dev)}</td><td class="muted">${f0(X.dealsN)}</td>`}</tr>`;
+  const rowT = (cls, lbl, X, at="") => `<tr class="${cls}"${at}><td>${lbl}</td><td>${f0(X.own.n)}</td><td class="own">${f0(X.own.ppm)}</td><td>${f1(X.own.bud/1e6)}</td><td>${f1(X.own.area)}</td>${noE ? "" : `<td>${f0(X.E&&X.E.med)}</td><td class="muted">${f1(X.areaE)}</td><td class="${devCls(X.E&&X.E.dev)}">${pc(X.E&&X.E.dev)}</td>`}${noD ? "" : `<td>${f0(X.D&&X.D.med)}</td><td class="muted">${f1(X.areaD)}</td><td class="${devCls(X.D&&X.D.dev)}">${pc(X.D&&X.D.dev)}</td><td class="muted">${f0(X.dealsN)}</td>`}</tr>`;
   const multiT = new Set(shown.map(a=>a.g.t)).size > 1;
   const body = shown.map((a,i)=>{ const dE=dev(a.own.ppm,a.medE), dD=dev(a.own.ppm,a.medD);
-    const row = `<tr data-k="${a.g.key}"><td>${a.g.label}</td><td>${f0(a.own.n)}</td><td class="own">${f0(a.own.ppm)}</td><td>${f1(a.own.bud/1e6)}</td><td>${f1(a.own.area)}</td>${noE ? "" : `<td>${f0(a.medE)}</td><td class="muted">${f1(a.areaE)}</td><td class="${devCls(dE)}">${pc(dE)}</td>`}${noD ? "" : `<td>${f0(a.medD)}</td><td class="muted">${f1(a.areaD)}</td><td class="${devCls(dD)}">${pc(dD)}</td><td class="muted">${f0(a.dealsN)}</td>`}</tr>`;
-    const last = isA && multiT && (i===shown.length-1 || shown[i+1].g.t!==a.g.t);
-    return row + (last ? rowT("tot sub", `Итого ${TL[a.g.t]}`, total(shown.filter(x=>x.g.t===a.g.t))) : ""); }).join("");
+    const row = `<tr data-k="${a.g.key}"${grp ? ` class="gd"${open.has(a.g.t) ? "" : " hidden"}` : ""}><td>${grp ? a.g.label.replace(/^[^,]+,s*/,"") : a.g.label}</td><td>${f0(a.own.n)}</td><td class="own">${f0(a.own.ppm)}</td><td>${f1(a.own.bud/1e6)}</td><td>${f1(a.own.area)}</td>${noE ? "" : `<td>${f0(a.medE)}</td><td class="muted">${f1(a.areaE)}</td><td class="${devCls(dE)}">${pc(dE)}</td>`}${noD ? "" : `<td>${f0(a.medD)}</td><td class="muted">${f1(a.areaD)}</td><td class="${devCls(dD)}">${pc(dD)}</td><td class="muted">${f0(a.dealsN)}</td>`}</tr>`;
+    const first = grp && (i===0 || shown[i-1].g.t!==a.g.t);
+    const hdr = first ? rowT("tot sub grp", `<span class="car" aria-hidden="true">${open.has(a.g.t) ? "▾" : "▸"}</span>${TL[a.g.t]}`, total(shown.filter(x=>x.g.t===a.g.t)), ` data-t="${a.g.t}" aria-expanded="${open.has(a.g.t)}" tabindex="0"`) : "";
+    return hdr + row; }).join("");
   const tot = rowT("tot", "Итого", T);
   document.getElementById("sum").innerHTML = head + `<tbody>${body}${tot}</tbody>`;
+  const tgl = t => { const o = new Set(Array.isArray(S.sopen) ? S.sopen : []); o.has(t) ? o.delete(t) : o.add(t); S.sopen = [...o]; render(); };
+  document.querySelectorAll("#sum tr.grp").forEach(tr=>{ tr.addEventListener("click",()=>tgl(tr.dataset.t)); tr.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); tgl(tr.dataset.t); } }); });
+  const ga = document.querySelector("#sum .grp-all"); if(ga) ga.addEventListener("click",e=>{ e.stopPropagation(); S.sopen = allOpen ? [] : [...new Set(shown.map(a=>a.g.t))]; render(); });
   document.querySelectorAll("#sum tbody tr[data-k]").forEach(tr=>tr.addEventListener("click",()=>{ const el=document.getElementById("c-"+tr.dataset.k.replace("|","-")); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }));
 
   /* charts */
