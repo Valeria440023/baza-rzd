@@ -316,7 +316,7 @@ table.dx.fix tr.dxm td:first-child{background:#EEF4FA} table.dx.fix tr.dxm.own t
     <nav class="nav-sec" role="tablist" aria-label="Разрез">
       <button class="nav-btn" role="tab" id="tab-summary" aria-selected="false">Выводы</button>
       <button class="nav-btn" role="tab" id="tab-price" aria-selected="true">Прайс</button>
-      <button class="nav-btn" role="tab" id="tab-cmp" aria-selected="false">Сравнение секций</button>
+      <button class="nav-btn" role="tab" id="tab-cmp" aria-selected="false" hidden>Сравнение секций</button>
       <button class="nav-btn" role="tab" id="tab-product" aria-selected="false">Продукт</button>
       <button class="nav-btn" role="tab" id="tab-sales" aria-selected="false">Инструменты продаж</button>
       <button class="nav-btn" role="tab" id="tab-deals" aria-selected="false">Сделки и экспозиция</button>
@@ -752,6 +752,7 @@ document.getElementById("tab-cmp").addEventListener("click",()=>{ S.view="cmp"; 
 /* ---------- render ---------- */
 const charts = [];
 function render(){
+  if(S.view==="cmp" && document.getElementById("tab-cmp").hidden) S.view="summary";
   document.getElementById("tab-price").setAttribute("aria-selected", S.view==="rooms" || S.view==="area");
   document.querySelectorAll("#f-view .chip").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===S.view));
   document.getElementById("tab-product").setAttribute("aria-selected", S.view==="product");
